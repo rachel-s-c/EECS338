@@ -3,6 +3,7 @@
 
 import newspaper 
 import spacy
+import wikipedia 
 
 
 cnn = newspaper.build('http://www.cnn.com', memoize_articles = False)
@@ -16,10 +17,8 @@ cnn_first.parse()
 #print(cnn_first.authors)
 #print(cnn_first.summary)
 #print(cnn_first.text)
-print(cnn_first.text)
-print(cnn_first.url)
-
-
+#print(cnn_first.text)
+#print(cnn_first.url)
 
 
 
@@ -55,6 +54,15 @@ doc = nlp(cnn_first.text)
 #for token in doc:
 #    print(token.text)
     
-for ent in doc.ents:
-    print(ent.text, ent.start_char, ent.end_char, ent.label_)
+#for ent in doc.ents:
+#    print(ent.text, ent.start_char, ent.end_char, ent.label_)
     
+
+wiki_summary = wikipedia.summary("google")
+#print(wiki_summary.text, wiki_summary.label)
+
+doc_wiki = nlp(wiki_summary)
+for ent in doc_wiki.ents:
+    if ent.label_ == 'GPE':
+        print(ent.text)
+ 
