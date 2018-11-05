@@ -80,6 +80,7 @@ for ent in doc_wiki.ents:
         print(ent.text)
         #if the tag is a GPE, append it to the list of tags under the tags key in the dictionary
         defaultdict["tags"] += [ent.label]
+defaultdict["tags"] = list(set(defaultdict["tags"]))
  #insert the article with the tags into the database
 articles.insert_one(defaultdict) 
 #clear the dictionary for the next article
