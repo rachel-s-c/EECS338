@@ -1,1 +1,1 @@
-web: gunicorn flask338:app
+web: gunicorn localangle-stage:app
