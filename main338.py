@@ -1,26 +1,14 @@
-
 import newspaper 
 import spacy
 import wikipedia
 import pymongo
-import pprint
 
 myclient = pymongo.MongoClient('mongodb+srv://psachaj:jump100!@eecs338localangle-toryj.mongodb.net/test?retryWrites=true')
 mydb = myclient['mydatabase']
 articles = mydb["info"]
 
 
-# Python code to remove duplicate elements 
-def Remove(duplicate): 
-    final_list = [] 
-    for num in duplicate: 
-        if num not in final_list: 
-            final_list.append(num) 
-    return final_list 
-
-
 cnn = newspaper.build('http://www.cnn.com', memoize_articles = False)
-"""
 bbc = newspaper.build('http://www.bbc.com', memoize_articles = False)
 forbes = newspaper.build('http://www.forbes.com', memoize_articles = False)
 nytimes = newspaper.build('http://www.nytimes.com', memoize_articles = False)
@@ -34,38 +22,30 @@ nbc = newspaper.build('https://www.nbcnews.com/', memoize_articles = False)
 abc = newspaper.build('https://abcnews.go.com/', memoize_articles = False)
 bi = newspaper.build('https://www.businessinsider.com/', memoize_articles = False)
 cbs = newspaper.build('https://www.cbsnews.com/', memoize_articles = False)
-"""
 
 
-allsources = cnn.articles 
-"""
-+ bbc.articles + forbes.articles + nytimes.articles + wsj.articles + washpost.articles + econ.articles + newyork.articles + atlantic.articles + usatoday.articles + nbc.articles + abc.articles + bi.articles + cbs.articles
-"""
-alltexts = allsources
+allsources = cnn.articles + bbc.articles + forbes.articles + nytimes.articles + wsj.articles + washpost.articles + econ.articles + newyork.articles + atlantic.articles + usatoday.articles + nbc.articles + abc.articles + bi.articles + cbs.articles
+
+
+print(len(allsources))
 
 urls = list()
 
 for article in allsources:
     urls.append(article.url)
 
-
-print(len(allsources))
-
 totaldict = []
 
 currfortotal = 1
 
-
-from newspaper import fulltext
-import requests
 spacyreader = spacy.load('en')
 
-for i in range(1, 5):
+for i in range(1, (len(allsources) - 1)):
     try:
-        html = requests.get(allsources[i].url).text
-        text = fulltext(html)
-        alltexts[i] = text
-        doc = spacyreader(alltexts[i])
+        a = allsources[i]
+        a.download()
+        a.parse()
+        doc = spacyreader(a.text)
         defaultdict = {}
         defaultdict["url"] = ""
         defaultdict["tags"] = []
@@ -73,40 +53,44 @@ for i in range(1, 5):
         searchedlist = list()
         for ent in doc.ents:
             if ent.label_ == 'GPE':
-                defaultdict["tags"] += [ent.text]
+                defaultdict["tags"] += [[ent.text, "Searched Location Mentioned in Article"]]
             if (ent.label_ == 'PERSON' or ent.label_ == 'ORG'):
                 if not (ent.text in searchedlist):
                     try:
+                        wikisearched = ent.text
                         searchedlist.append(ent.text)
                         wiki_summary = wikipedia.summary(ent.text)
                         doc_wiki = spacyreader(wiki_summary)
                         for ent in doc_wiki.ents:
                             if ent.label_ == 'GPE':
-                                defaultdict["tags"] += [ent.text]
+                                defaultdict["tags"] += [[ent.text, wikisearched]]
                     except:
                         searchedlist.append(ent.text)
-        defaultdict["tags"] = list(set(defaultdict["tags"]))
+        keepingtrack = []
+        mylist = list()
+        for pair in defaultdict["tags"]:
+            if pair[0] not in mylist:
+                mylist.append(pair[0])
+                keepingtrack.append(pair)     
+        defaultdict["tags"] = keepingtrack         
         totaldict.insert(currfortotal, defaultdict)
         currfortotal += 1
         del defaultdict
         print(i)
     except:
-        alltexts[i] = "Error"
+        c = 1
  
 
 for a in totaldict:
     articles.insert_one(a)
 
-x = articles.find({"tags": { "$elemMatch": { "$eq": "Washington" } }})
-
-for y in x:
-    print(y['url'])
+#x = articles.find({"tags": { "$elemMatch": { "$elemMatch": { "$eq": "Congo" } }}})
+#
+#for y in x:
+#    print(y['url'])
     
 myclient.close()       
         
-
-    
-    
 
 
 
